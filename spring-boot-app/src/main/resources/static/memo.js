@@ -14,4 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-email').textContent = sessionData.user?.email;
     })();
 
+    // --- ログアウト処理 ---
+    document.getElementById('logout-btn').onclick = async () => {
+        try {
+            await apiFetch('/api/auth/logout', { method: 'POST' }, accessToken);
+            localStorage.removeItem('user_session');
+            window.location.href = '/index.html';
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
 });

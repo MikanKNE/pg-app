@@ -41,4 +41,27 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("email", user.get("email")));
     }
 
+    /**
+     * ログインを行います
+     * @param request アカウント情報
+     * @return 実行結果
+     */
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody AuthRequest request) {
+        Map<String, Object> result = supabaseAuthService.loginWithPassword(request.getEmail(), request.getPassword());
+        return result.containsKey("access_token")
+                ? ResponseEntity.ok(result)
+                : ResponseEntity.badRequest().body(result);
+    }
+    
+    /**
+     * ログアウトを行います
+     * @param authorizationHeader Authorizationヘッダ
+     * @return 実行結果
+     */
+    @PostMapping("/logout")
+   public ResponseEntity<Map<String, Object>> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        supabaseAuthService.logout(authorizationHeader.substring(7));
+        return ResponseEntity.ok(Map.of("message", "Logout successful."));
+    }
 }

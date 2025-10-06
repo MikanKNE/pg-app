@@ -44,4 +44,33 @@ public class SupabaseAuthService {
                 .block();
     }
 
+        /**
+     * Eメール/パスワードを使ってSupabase認証を行います
+     * @param email Eメール
+     * @param password パスワード
+     * @return 認証結果
+     */
+    public Map<String, Object> loginWithPassword(String email, String password) {
+        return webClient.post()
+                .uri("/auth/v1/token?grant_type=password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("email", email, "password", password))
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .block();
+    }
+
+    /**
+     * アクセストークンよりログアウトを行います
+     * @param accessToken アクセストークン
+     */
+    public void logout(String accessToken) {
+        webClient.post()
+            .uri("/auth/v1/logout")
+            .header("Authorization", "Bearer " + accessToken)
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+            .block();
+    }    
+
 }

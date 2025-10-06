@@ -28,4 +28,25 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('user_session', JSON.stringify(sessionData));
         window.location.href = '/memo.html';
     })();
+
+        // --- ログイン(メール) ---
+    document.getElementById('login-btn').onclick = async () => {
+        showError('');
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        try {
+            const sessionData = await apiFetch('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            if (!sessionData.access_token || !sessionData.refresh_token) {
+                throw new Error('トークンが取得できませんでした.');
+            }
+            localStorage.setItem('user_session', JSON.stringify(sessionData));
+            window.location.href = '/memo.html';
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
 });
