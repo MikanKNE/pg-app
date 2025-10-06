@@ -36,7 +36,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())            
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
-                        "/", "/*.html", "/*.css", "/*.js", "/favicon.ico"
+                        "/", "/*.html", "/*.css", "/*.js", "/favicon.ico", "/api/auth/**"
                     ).permitAll()
                 .anyRequest().authenticated()
             );
