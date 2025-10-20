@@ -2,6 +2,8 @@ from config import Config
 from flask import Flask
 from flask.wrappers import Response as ResponseBase
 from flask_cors import CORS
+from routes_auth import bp_auth
+from supabase_auth_filter import auth_filter
 
 # Flaskアプリケーション初期化
 app = Flask(__name__, static_folder="static", static_url_path="")
@@ -12,6 +14,10 @@ CORS(
     allow_headers="*",
     supports_credentials=True
 )
+
+app.register_blueprint(bp_auth)
+
+app.before_request(auth_filter)
 
 # デフォルトページ
 @app.route("/")
