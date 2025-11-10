@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +38,7 @@ func RegisterAuthRoutes(router *gin.Engine) {
 	router.POST("/api/auth/register", func(c *gin.Context) {
 		var form AuthForm
 		c.ShouldBindJSON(&form)
-		redirectTo := strings.TrimRight(c.Request.Host, "/") + "/"
+		redirectTo := baseHostURL(c)
 		result, _ := Signup(form.Email, form.Password, redirectTo)
 		if result["id"] != nil {
 			c.JSON(http.StatusOK, gin.H{"message": "Registration successful. Please check your email for confirmation."})
@@ -50,7 +49,7 @@ func RegisterAuthRoutes(router *gin.Engine) {
 
 	// GitHub認証リダイレクト
 	router.GET("/api/auth/oauth2/github", func(c *gin.Context) {
-		redirectTo := strings.TrimRight(c.Request.Host, "/") + "/"
+		redirectTo := baseHostURL(c)
 		githubURL := GetGithubSigninURL(redirectTo)
 		c.Redirect(http.StatusFound, githubURL)
 	})
