@@ -12,6 +12,11 @@ func main() {
 	// ルータ初期化
 	router := gin.Default()
 
+	// DB初期化
+	if err := src.InitDB(); err != nil {
+		log.Fatal(err)
+	}
+
 	// CORS設定
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:3000"},
@@ -29,6 +34,8 @@ func main() {
 		c.File(path)
 	})
 
+	router.Use(src.SupabaseAuthMiddleware())
+	src.RegisterMemoRoutes(router)
 	src.RegisterAuthRoutes(router)
 
 	// アプリケーションの実行

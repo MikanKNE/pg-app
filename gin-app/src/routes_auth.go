@@ -48,6 +48,13 @@ func RegisterAuthRoutes(router *gin.Engine) {
 		c.JSON(http.StatusBadRequest, result)
 	})
 
+	// GitHub認証リダイレクト
+	router.GET("/api/auth/oauth2/github", func(c *gin.Context) {
+		redirectTo := strings.TrimRight(c.Request.Host, "/") + "/"
+		githubURL := GetGithubSigninURL(redirectTo)
+		c.Redirect(http.StatusFound, githubURL)
+	})
+
 	// 認証ユーザ情報取得
 	router.GET("/api/auth/user", func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
