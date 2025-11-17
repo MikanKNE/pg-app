@@ -8,6 +8,7 @@ use config::CONFIG;
 
 mod supabase_auth_service;
 mod routes_auth;
+mod supabase_auth_middleware;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -24,6 +25,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .wrap(cors)
+            .wrap(supabase_auth_middleware::SupabaseAuthMiddleware)
             .configure(routes_auth::config)
             .service(Files::new("/", "./static").index_file("index.html"))
     })
