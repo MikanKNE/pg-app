@@ -10,9 +10,23 @@ mod supabase_auth_service;
 mod routes_auth;
 mod supabase_auth_middleware;
 
+mod db;
+mod models;
+mod routes_memo;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     
+    // Initialize database connection
+    if let Err(e) = db::init_db().await {
+        eprintln!("Failed to initialize database: {}", e);
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("Database initialization failed: {}", e),
+        ));
+    }
+    println!("✅ Database connection established");
+
     println!("🚀 Server running at http://0.0.0.0:{}", CONFIG.server_port);
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     HttpServer::new(|| {
@@ -27,6 +41,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(supabase_auth_middleware::SupabaseAuthMiddleware)
             .configure(routes_auth::config)
+            .configure(routes_memo::config)
             .service(Files::new("/", "./static").index_file("index.html"))
     })
     .bind(("0.0.0.0", CONFIG.server_port))?
