@@ -29,6 +29,9 @@ export default function MemosPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // ユーザー情報
+  const [userEmail, setUserEmail] = useState('');
+
   const router = useRouter();
 
   // ログアウト
@@ -52,6 +55,14 @@ export default function MemosPage() {
 
   useEffect(() => {
     loadMemos();
+
+    // ユーザー情報取得
+    const session = localStorage.getItem('user_session');
+    if (session) {
+      const user = JSON.parse(session);
+      if (user.email) setUserEmail(user.email);
+      else if (user.user?.email) setUserEmail(user.user.email);
+    }
   }, []);
 
   // メモ作成
@@ -109,15 +120,19 @@ export default function MemosPage() {
     <div className="w-full flex flex-col items-center justify-center mt-24 px-4 space-y-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardContent>
-          <Button
-            variant="outlined"
-            fullWidth
-            sx={{ mb: 2 }}
-            onClick={logout}
-          >
-            ログアウト
-          </Button>
+          {/* ユーザー情報とログアウト */}
+          <div className="flex justify-between items-center mb-4">
+            <Typography className="truncate">{userEmail}</Typography>
+            <Button
+              variant="outlined"
+              onClick={logout}
+              sx={{ ml: 2 }}
+            >
+              ログアウト
+            </Button>
+          </div>
 
+          {/* メモ作成 */}
           <Typography variant="h5" className="text-center font-bold mb-4">
             メモ作成
           </Typography>
