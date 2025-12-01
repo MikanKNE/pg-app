@@ -1,193 +1,87 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { TextField, Button, Card, CardContent, Typography } from '@mui/material';
+import MessageSnackbar from '../components/MessageSnackbar';
 import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  Button,
-  TextField,
-  Typography,
-  IconButton,
-  Divider,
-  Snackbar,
-  Alert,  
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
-
-type Memo = {
-  id: number;
-  user_id: string;
-  title: string;
-  content?: string;
-  createdAt: string;
-};
+import { apiAuthFetch, errorHandling  } from '@/lib/apiFetch';
 
 export default function MemosPage() {
-  const [memos, setMemos] = useState<Memo[]>([]);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [memo, setMemo] = useState('');
   const [error, setError] = useState('');
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editContent, setEditContent] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  async function loadMemos() {
-  }
-
-  useEffect(() => {
-    (async () => {
-      await loadMemos();
-    })();
-  }, []);
-
-  async function createMemo() {
-  }
-
-  async function deleteMemo(id: number) {
-  }
-
-  function startEdit(memo: Memo) {
-  }
-
-  function cancelEdit() {
-  }
-
-  async function updateMemo(id: number) {
-  }
+  const router = useRouter();
 
   async function logout() {
-    window.location.href = '/';  
+    setError('');
+    try {
+      await apiAuthFetch(`/api/auth/logout`, {
+        method: 'POST',
+      });
+    } finally {
+      localStorage.removeItem('user_session');
+      router.push('/');
+    }
+  }
+
+  async function createMemo() {
+    if (!memo) {
+      setError('登録失敗しました。');
+      return;
+    }
+    setSuccessMessage('メモを登録しました。');
   }
 
   return (
-    <div className="max-w-2xl w-full px-4 py-10">
-      <div className="flex justify-between items-center mb-4">
-        <Typography variant="h4" className="font-bold">
-          メモ一覧
-        </Typography>
-        <Button variant="outlined" color="inherit" onClick={logout}>
-          ログアウト
-        </Button>
-      </div>
-
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClose={() => setError('')}
-      >
-        <Alert onClose={() => setError('')} severity="error">
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Card className="mb-6 shadow-md" variant="outlined">
+    <div className="w-full flex items-center justify-center mt-24 px-4">
+      <Card className="w-full max-w-md shadow-xl">
         <CardContent>
-          <Typography variant="h6" className="font-semibold">
-            メモ追加
+
+          <Button
+            variant="outlined"
+            fullWidth
+            sx={{ mt: 2 }}
+            onClick={logout}
+          >
+            ログアウト
+          </Button>
+          
+          <Typography variant="h5" className="text-center font-bold mb-4">
+            メモ作成
           </Typography>
 
           <TextField
-            label="タイトル"
             fullWidth
-            sx={{ mb: 1 }}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          <TextField
-            label="内容"
-            fullWidth
+            label="メモ内容"
             multiline
-            minRows={3}
-            sx={{ mb: 1 }}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            rows={3}
+            sx={{ mb: 2 }}
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
           />
 
-          <Button variant="contained" className="w-full" onClick={createMemo}>
-            追加
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={createMemo}
+          >
+            登録
           </Button>
         </CardContent>
       </Card>
 
-      <Divider className="mb-4" />
+      <MessageSnackbar
+        message={error}
+        severity="error"
+        onClose={() => setError('')}
+      />
 
-      <div className="space-y-4">
-        {memos.map((memo) => (
-          <Card key={memo.id} className="shadow-sm">
-            <CardContent>
-              {editingId === memo.id ? (
-                <>
-                  <TextField
-                    label="タイトル"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                  />
-                  <TextField
-                    label="内容"
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    sx={{ mb: 2 }}
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <IconButton
-                      color="primary"
-                      onClick={() => updateMemo(memo.id)}
-                    >
-                      <SaveIcon />
-                    </IconButton>
-                    <IconButton color="default" onClick={cancelEdit}>
-                      <CancelIcon />
-                    </IconButton>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between items-start mb-2">
-                    <Typography className="text-xs text-gray-500">
-                      {new Date(memo.createdAt).toLocaleString()}
-                    </Typography>
-                    <div>
-                      <IconButton
-                        color="info"
-                        size="small"
-                        onClick={() => startEdit(memo)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="inherit"
-                        size="small"
-                        onClick={() => deleteMemo(memo.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </div>
-                  </div>
-
-                  <Typography variant="h6" className="mb-2">
-                    {memo.title}
-                  </Typography>
-
-                  <Typography className="text-gray-700 whitespace-pre-line">
-                    {memo.content}
-                  </Typography>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <MessageSnackbar
+        message={successMessage}
+        severity="success"
+        onClose={() => setSuccessMessage('')}
+      />
     </div>
   );
 }
