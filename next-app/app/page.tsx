@@ -37,6 +37,10 @@ export default function LoginPage() {
     }, setError);
   };
 
+  const loginGithub = () => {
+    window.location.href = '/api/auth/oauth2/github';
+  };
+
   const register = async () => {
     await errorHandling(async () => {
       await apiFetch('/api/auth/register', {
@@ -124,6 +128,7 @@ export default function LoginPage() {
               bgcolor: 'black', color: 'white',
               '&:hover': { opacity: 0.8 },
             }}
+            onClick={loginGithub}
           >
             <GitHubIcon />
             GitHub ログイン

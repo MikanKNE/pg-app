@@ -43,6 +43,13 @@ function signup(email: string, password: string, redirectTo: string) {
   });
 }
 
+// GitHub認証用URL取得
+function getGithubSigninUrl(redirectTo: string) {
+  return `${SUPABASE_URL}/auth/v1/authorize?provider=github&redirect_to=${encodeURIComponent(
+    redirectTo
+  )}&scopes=user:email`;
+}
+
 // ログイン(メール/パスワード)
 function login(email: string, password: string) {
   return apiRequest({
@@ -75,4 +82,5 @@ export const SupabaseAuthService = {
   login,
   logout,
   getUserByAccessToken,
+  getGithubSigninUrl,
 };
