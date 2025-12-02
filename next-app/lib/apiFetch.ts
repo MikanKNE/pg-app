@@ -18,12 +18,17 @@ export async function apiFetch(
     window.location.href = '/';
     throw new Error('Unauthorized');
   }
+
+  if (response.status === 204) return {};
+
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.text().then((t) => (t ? JSON.parse(t) : {})).catch(() => ({}));
     throw new Error('APIリクエストに失敗しました. ' + JSON.stringify(error));
   }
-  return response.json();
+
+  return response.json().catch(() => ({}));
 }
+
 
 // 共通認証後APIリクエスト処理
 export async function apiAuthFetch(url: string, options: RequestInit = {}) {
