@@ -117,7 +117,7 @@ export default function MemosPage() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center justify-center mt-24 px-4 space-y-4">
+    <div className="w-full min-h-screen flex flex-col items-center mt-24 px-4 space-y-4 overflow-y-auto">
       <Card className="w-full max-w-md shadow-xl">
         <CardContent>
           {/* ユーザー情報とログアウト */}
