@@ -30,12 +30,16 @@ async fn main() -> std::io::Result<()> {
     println!("🚀 Server running at http://0.0.0.0:{}", CONFIG.server_port);
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     HttpServer::new(|| {
-        let cors = Cors::default()
-            .allowed_origin("http://localhost:8080")
-            .allowed_origin("http://localhost:3000")
+        let mut cors = if CONFIG.frontend_url.is_empty() {
+            Cors::default().allow_any_origin()
+        } else {
+            Cors::default().allowed_origin(&CONFIG.frontend_url)
+        };
+        cors = cors
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
             .allow_any_header()
             .supports_credentials();
+
         App::new()
             .wrap(Logger::default())
             .wrap(cors)

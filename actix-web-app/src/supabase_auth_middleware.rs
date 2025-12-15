@@ -62,6 +62,11 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        // プリフライト(OPTIONS)判定
+        if req.method() == actix_web::http::Method::OPTIONS {
+            return Box::pin(self.service.call(req));
+        }
+
         // 認証不要パス判定
         if is_auth_ignored(req.path()) {
             return Box::pin(self.service.call(req));

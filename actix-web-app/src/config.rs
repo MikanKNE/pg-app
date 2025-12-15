@@ -6,6 +6,9 @@ pub struct Config {
     // サーバ設定
     pub server_port: u16,
 
+    // フロントエンド設定
+    pub frontend_url: String,
+
     // Supabase 通信設定
     pub supabase_url: String,
     pub supabase_anon_key: String,
@@ -23,6 +26,8 @@ impl Config {
     pub fn from_env() -> Self {
         let server_port = 8280;
 
+        let frontend_url = env::var("FRONTEND_URL").unwrap_or_default();
+
         let supabase_url = env::var("SUPABASE_URL").unwrap_or_default();
         let supabase_anon_key = env::var("SUPABASE_ANON_KEY").unwrap_or_default();
 
@@ -39,6 +44,7 @@ impl Config {
 
         Config {
             server_port,
+            frontend_url,
             supabase_url,
             supabase_anon_key,
             // tidb_user,
