@@ -2,6 +2,7 @@ from typing import Dict, Any
 from flask import Blueprint, jsonify, request, Response, redirect
 from supabase_auth_service import SupabaseAuthService
 import logging
+from config import Config
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +34,15 @@ def auth_user() -> Response:
         access_token=auth_header[7:]
     )
     return jsonify({"email": supabase_result.get("email")}), status_code
-    
+
+@bp_auth.route("/api/auth/oauth2/github")
+def redirect_to_github() -> Response:
+    redirect_to: str = redirect_url()
+    github_url: str = supabase_auth_service.get_github_signin_url(
+        redirect_to=redirect_to
+    )
+    return redirect(github_url)
+
 # ログイン
 @bp_auth.route("/api/auth/login", methods=["POST"])
 def login() -> Response:
@@ -60,3 +69,8 @@ def base_host_url() -> str:
               or request.scheme)
     logger.info("base_host_url host=%s scheme=%s", host, scheme)
     return f"{scheme}://{host}/"
+
+# redirect_urlの作成
+def redirect_url() -> str:
+    logger.info("frontend_url=%s", Config.FRONTEND_URL)
+    return f"{Config.FRONTEND_URL}/" if Config.FRONTEND_URL else base_host_url()

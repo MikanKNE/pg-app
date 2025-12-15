@@ -8,6 +8,9 @@ class Config:
     SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
     SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
 
+    # フロントエンドURL
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "")
+
     # TiDB Cloud (MySQL) 接続情報
     TIDB_USER = os.environ.get("TIDB_USER", "")
     TIDB_PASSWORD = os.environ.get("TIDB_PASSWORD", "")

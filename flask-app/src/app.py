@@ -11,7 +11,7 @@ from routes_memo import bp_memo
 app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(
     app,
-    resources={r"/api/*": {"origins": ["http://localhost:8080", "http://localhost:3000"]}},
+    resources={r"/api/*": {"origins": [Config.FRONTEND_URL] if Config.FRONTEND_URL else ["*"]}},
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers="*",
     supports_credentials=True

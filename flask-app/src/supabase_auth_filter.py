@@ -1,11 +1,15 @@
 from flask import request, jsonify, g
 from fnmatch import fnmatch
 from supabase_auth_service import SupabaseAuthService
+from config import Config
 
 supabase_auth_service = SupabaseAuthService()
 
 # 認証フィルター
 def auth_filter():
+    if request.method == "OPTIONS":
+        return
+    
     excluded_patterns = [
         "/", "/*.html", "/*.css", "/*.js", "/favicon.ico",
         "/api/auth/*"
