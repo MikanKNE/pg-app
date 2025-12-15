@@ -7,6 +7,7 @@ import (
 
 type AppConfig struct {
 	ServerPort      string
+	FrontendURL     string
 	SupabaseURL     string
 	SupabaseAnonKey string
 	TiDBUser        string
@@ -28,6 +29,7 @@ func init() {
 func newConfig() *AppConfig {
 	config := &AppConfig{
 		ServerPort:      "8180",
+		FrontendURL:     getEnv("FRONTEND_URL", ""),
 		SupabaseURL:     getEnv("SUPABASE_URL", ""),
 		SupabaseAnonKey: getEnv("SUPABASE_ANON_KEY", ""),
 		TiDBUser:        getEnv("TIDB_USER", ""),

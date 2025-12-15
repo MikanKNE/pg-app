@@ -38,7 +38,7 @@ func RegisterAuthRoutes(router *gin.Engine) {
 	router.POST("/api/auth/register", func(c *gin.Context) {
 		var form AuthForm
 		c.ShouldBindJSON(&form)
-		redirectTo := baseHostURL(c)
+		redirectTo := redirectURL(c)
 		result, _ := Signup(form.Email, form.Password, redirectTo)
 		if result["id"] != nil {
 			c.JSON(http.StatusOK, gin.H{"message": "Registration successful. Please check your email for confirmation."})
@@ -49,7 +49,7 @@ func RegisterAuthRoutes(router *gin.Engine) {
 
 	// GitHub認証リダイレクト
 	router.GET("/api/auth/oauth2/github", func(c *gin.Context) {
-		redirectTo := baseHostURL(c)
+		redirectTo := redirectURL(c)
 		githubURL := GetGithubSigninURL(redirectTo)
 		c.Redirect(http.StatusFound, githubURL)
 	})
@@ -75,5 +75,13 @@ func RegisterAuthRoutes(router *gin.Engine) {
 		Logout(authHeader[7:])
 		c.JSON(http.StatusOK, gin.H{"message": "Logout successful."})
 	})
+}
 
+// redirectURLの作成
+func redirectURL(c *gin.Context) string {
+	log.Printf("FrontendURL=%s", Config.FrontendURL)
+	if Config.FrontendURL != "" {
+		return fmt.Sprintf("%s/", Config.FrontendURL)
+	}
+	return baseHostURL(c)
 }
