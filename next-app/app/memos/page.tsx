@@ -1,11 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TextField, Button, Card, CardContent, Typography } from '@mui/material';
-import MessageSnackbar from '../components/MessageSnackbar';
+import {
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
+
+import MessageSnackbar from '../components/MessageSnackbar';
 import { apiAuthFetch, errorHandling } from '@/lib/apiFetch';
 
+/**
+ * メモ型
+ */
 type Memo = {
   id: number;
   title: string;
@@ -13,14 +23,21 @@ type Memo = {
 };
 
 export default function MemosPage() {
-  // 新規作成用
+  /* -----------------------------
+   * state
+   * ----------------------------- */
+
+  // 新規作成
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  // メモ一覧
+  // AI要約中
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // 一覧
   const [memos, setMemos] = useState<Memo[]>([]);
 
-  // 編集用
+  // 編集
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
@@ -34,16 +51,9 @@ export default function MemosPage() {
 
   const router = useRouter();
 
-  // ログアウト
-  async function logout() {
-    setError('');
-    try {
-      await apiAuthFetch(`/api/auth/logout`, { method: 'POST' });
-    } finally {
-      localStorage.removeItem('user_session');
-      router.push('/');
-    }
-  }
+  /* -----------------------------
+   * 共通処理
+   * ----------------------------- */
 
   // メモ一覧取得
   const loadMemos = async () => {
@@ -53,26 +63,85 @@ export default function MemosPage() {
     }, setError);
   };
 
+  /* -----------------------------
+   * 初期処理
+   * ----------------------------- */
   useEffect(() => {
     loadMemos();
 
-    // ユーザー情報取得
     const session = localStorage.getItem('user_session');
-    if (session) {
+    if (!session) return;
+
+    try {
       const user = JSON.parse(session);
       if (user.email) setUserEmail(user.email);
       else if (user.user?.email) setUserEmail(user.user.email);
+    } catch {
+      // JSON壊れてても落とさない
     }
   }, []);
 
-  // メモ作成
+  /* -----------------------------
+   * 認証
+   * ----------------------------- */
+
+  // ログアウト
+  async function logout() {
+    setError('');
+    try {
+      await apiAuthFetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      localStorage.removeItem('user_session');
+      router.push('/');
+    }
+  }
+
+  /* -----------------------------
+   * AI 要約
+   * ----------------------------- */
+
+  async function summarizeByAI() {
+    if (!title) {
+      setError('要約するタイトルを入力してください');
+      return;
+    }
+
+    setIsSummarizing(true);
+    setError('');
+
+    await errorHandling(async () => {
+      const res = await apiAuthFetch('/api/ai/summary', {
+        method: 'POST',
+        body: JSON.stringify({
+          query: title,
+        }),
+      });
+
+      // Difyの結果を内容に反映
+      setContent(res.summary);
+      setSuccessMessage('AI要約が完了しました');
+    }, setError);
+
+    setIsSummarizing(false);
+  }
+
+  /* -----------------------------
+   * CRUD
+   * ----------------------------- */
+
+  // 作成
   async function createMemo() {
-    if (!title) return setError('タイトルを入力してください');
+    if (!title) {
+      setError('タイトルを入力してください');
+      return;
+    }
+
     await errorHandling(async () => {
       await apiAuthFetch('/api/memos', {
         method: 'POST',
         body: JSON.stringify({ title, content }),
       });
+
       setTitle('');
       setContent('');
       await loadMemos();
@@ -80,7 +149,7 @@ export default function MemosPage() {
     }, setError);
   }
 
-  // メモ削除
+  // 削除
   async function deleteMemo(id: number) {
     await errorHandling(async () => {
       await apiAuthFetch(`/api/memos/${id}`, { method: 'DELETE' });
@@ -92,7 +161,7 @@ export default function MemosPage() {
   function startEdit(memo: Memo) {
     setEditingId(memo.id);
     setEditTitle(memo.title);
-    setEditContent(memo.content || '');
+    setEditContent(memo.content ?? '');
   }
 
   // 編集キャンセル
@@ -102,37 +171,42 @@ export default function MemosPage() {
     setEditContent('');
   }
 
-  // メモ更新
+  // 更新
   async function updateMemo() {
     if (editingId === null) return;
+
     await errorHandling(async () => {
       await apiAuthFetch(`/api/memos/${editingId}`, {
         method: 'PUT',
-        body: JSON.stringify({ title: editTitle, content: editContent }),
+        body: JSON.stringify({
+          title: editTitle,
+          content: editContent,
+        }),
       });
+
       cancelEdit();
       await loadMemos();
       setSuccessMessage('メモを更新しました');
     }, setError);
   }
 
+  /* -----------------------------
+   * JSX
+   * ----------------------------- */
   return (
     <div className="w-full min-h-screen flex flex-col items-center mt-24 px-4 space-y-4 overflow-y-auto">
+      {/* ヘッダー */}
       <Card className="w-full max-w-md shadow-xl">
         <CardContent>
-          {/* ユーザー情報とログアウト */}
           <div className="flex justify-between items-center mb-4">
-            <Typography className="truncate">{userEmail}</Typography>
-            <Button
-              variant="outlined"
-              onClick={logout}
-              sx={{ ml: 2 }}
-            >
+            <Typography className="truncate">
+              {userEmail}
+            </Typography>
+            <Button variant="outlined" onClick={logout}>
               ログアウト
             </Button>
           </div>
 
-          {/* メモ作成 */}
           <Typography variant="h5" className="text-center font-bold mb-4">
             メモ作成
           </Typography>
@@ -144,9 +218,20 @@ export default function MemosPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+
+          <Button
+            variant="outlined"
+            fullWidth
+            sx={{ mb: 2 }}
+            disabled={isSummarizing}
+            onClick={summarizeByAI}
+          >
+            {isSummarizing ? 'AI要約中...' : 'AIで要約'}
+          </Button>
+
           <TextField
             fullWidth
-            label="内容"
+            label="内容（AI要約結果）"
             multiline
             rows={3}
             sx={{ mb: 2 }}
@@ -164,7 +249,7 @@ export default function MemosPage() {
         </CardContent>
       </Card>
 
-      {/* メモ一覧 */}
+      {/* 一覧 */}
       {memos.map((memo) => (
         <Card key={memo.id} className="w-full max-w-md shadow">
           <CardContent>
@@ -186,22 +271,34 @@ export default function MemosPage() {
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                 />
-                <Button onClick={updateMemo} sx={{ mr: 1 }}>更新</Button>
-                <Button onClick={cancelEdit}>キャンセル</Button>
+                <Button onClick={updateMemo} sx={{ mr: 1 }}>
+                  更新
+                </Button>
+                <Button onClick={cancelEdit}>
+                  キャンセル
+                </Button>
               </>
             ) : (
               <>
-                <Typography variant="h6">{memo.title}</Typography>
-                <Typography>{memo.content}</Typography>
-                <Button onClick={() => startEdit(memo)} sx={{ mr: 1 }}>編集</Button>
-                <Button onClick={() => deleteMemo(memo.id)}>削除</Button>
+                <Typography variant="h6">
+                  {memo.title}
+                </Typography>
+                <Typography sx={{ mb: 1 }}>
+                  {memo.content}
+                </Typography>
+                <Button onClick={() => startEdit(memo)} sx={{ mr: 1 }}>
+                  編集
+                </Button>
+                <Button onClick={() => deleteMemo(memo.id)}>
+                  削除
+                </Button>
               </>
             )}
           </CardContent>
         </Card>
       ))}
 
-      {/* スナックバー */}
+      {/* メッセージ */}
       <MessageSnackbar
         message={error}
         severity="error"
